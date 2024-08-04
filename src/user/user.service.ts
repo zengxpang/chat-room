@@ -26,8 +26,6 @@ export class UserService {
       `register_captcha_${email}`,
     );
 
-    console.log(registerUser);
-
     if (!redisCaptcha) {
       throw new BadRequestException('验证码已失效');
     }
