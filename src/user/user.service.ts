@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class UserService {
@@ -65,6 +66,55 @@ export class UserService {
     } catch (e) {
       this.logger.error(e, UserService);
       return null;
+    }
+  }
+
+  async findUserById(id: number) {
+    return this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        username: true,
+        nickname: true,
+        email: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async updatePassword(updatePasswordDto: UpdatePasswordDto) {
+    const captcha = await this.redisService.get(
+      `update_password_captcha_${updatePasswordDto.email}`,
+    );
+    if (!captcha) {
+      throw new BadRequestException('验证码已失效');
+    }
+    if (captcha !== updatePasswordDto.captcha) {
+      throw new BadRequestException('验证码不正确');
+    }
+    const foundUser = await this.prismaService.user.findUnique({
+      where: {
+        username: updatePasswordDto.username,
+      },
+    });
+
+    try {
+      await this.prismaService.user.update({
+        where: {
+          id: foundUser.id,
+        },
+        data: {
+          password: updatePasswordDto.password,
+        },
+      });
+      return `密码修改成功`;
+    } catch (e) {
+      this.logger.error(e, UserService);
+      return `密码修改失败`;
     }
   }
 }

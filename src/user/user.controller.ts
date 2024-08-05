@@ -17,6 +17,8 @@ import { EmailService } from '../email/email.service';
 import { IsPublic } from '../is-public.decorator';
 import { LocalAuthGuard } from '../local-auth.guard';
 import { AuthService } from '../auth/auth.service';
+import { UserInfo } from '../custom.decorator';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 declare module 'express' {
   interface Request {
@@ -64,5 +66,33 @@ export class UserController {
   @Post('login')
   login(@Req() req: Request) {
     return this.authService.login(req.user);
+  }
+
+  @Get('userInfo')
+  async userInfo(@UserInfo('id') id: number) {
+    return this.userService.findUserById(id);
+  }
+
+  @Get('updatePasswordCaptcha')
+  async updatePasswordCaptcha(@UserInfo('email') email: string) {
+    const code = Math.random().toString().slice(2, 8);
+
+    await this.redisService.set(
+      `update_password_captcha_${email}`,
+      code,
+      5 * 60,
+    );
+
+    await this.emailService.sendMail({
+      to: email,
+      subject: '修改密码验证码',
+      html: `<p>你的修改密码验证码是 ${code}</p>`,
+    });
+    return '发送成功';
+  }
+
+  @Post('updatePassword')
+  async updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
+    return this.userService.updatePassword(updatePasswordDto);
   }
 }
