@@ -58,8 +58,8 @@ export class UserController {
 
   @IsPublic()
   @Post('register')
-  async register(@Body() registerUser: RegisterUserDto) {
-    return this.userService.register(registerUser);
+  async register(@Body() registerUserDto: RegisterUserDto) {
+    return this.userService.register(registerUserDto);
   }
 
   @IsPublic()
@@ -118,13 +118,8 @@ export class UserController {
   @Post('updateUserInfo')
   async updateUserInfo(
     @UserInfo('id') id: number,
-    @Body() updateUserInfo: UpdateUserInfoDto,
+    @Body() updateUserInfoDto: UpdateUserInfoDto,
   ) {
-    return this.userService.updateUserInfo(id, updateUserInfo);
-  }
-
-  @Get('friendShip')
-  async friendShip(@UserInfo('id') id: number) {
-    return this.userService.getFriendShip(id);
+    return this.userService.updateUserInfo(id, updateUserInfoDto);
   }
 }

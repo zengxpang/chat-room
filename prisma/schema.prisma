@@ -36,3 +36,22 @@ model FriendShip {
 
   @@id([userId, friendId])
 }
+
+enum FriendRequestStatus {
+  Pending
+  Accepted
+  Rejected
+}
+
+model FriendRequest {
+  id         Int                 @id @default(autoincrement())
+  // 请求发送方
+  fromUserId Int
+  // 待添加好友
+  toUserId   Int
+  // 添加好友的原因
+  reason     String              @default("") @db.VarChar(255)
+  status     FriendRequestStatus @default(Pending)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+}

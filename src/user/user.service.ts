@@ -22,8 +22,8 @@ export class UserService {
 
   private logger = new Logger();
 
-  async register(registerUser: RegisterUserDto) {
-    const { username, nickname, password, email, captcha } = registerUser;
+  async register(registerUserDto: RegisterUserDto) {
+    const { username, nickname, password, email, captcha } = registerUserDto;
 
     const redisCaptcha = await this.redisService.get(
       `register_captcha_${email}`,
@@ -39,7 +39,7 @@ export class UserService {
 
     const foundUser = await this.prismaService.user.findUnique({
       where: {
-        username: registerUser.username,
+        username: registerUserDto.username,
       },
     });
 
@@ -120,14 +120,14 @@ export class UserService {
     }
   }
 
-  async updateUserInfo(id: number, updateUserInfo: UpdateUserInfoDto) {
+  async updateUserInfo(id: number, updateUserInfoDto: UpdateUserInfoDto) {
     const captcha = await this.redisService.get(
-      `update_user_info_captcha_${updateUserInfo.email}`,
+      `update_user_info_captcha_${updateUserInfoDto.email}`,
     );
     if (!captcha) {
       throw new BadRequestException('验证码已失效');
     }
-    if (captcha !== updateUserInfo.captcha) {
+    if (captcha !== updateUserInfoDto.captcha) {
       throw new BadRequestException('验证码不正确');
     }
 
@@ -137,8 +137,8 @@ export class UserService {
           id,
         },
         data: {
-          avatar: updateUserInfo.avatar,
-          nickname: updateUserInfo.nickname,
+          avatar: updateUserInfoDto.avatar,
+          nickname: updateUserInfoDto.nickname,
         },
       });
       return `用户信息修改成功`;
@@ -146,37 +146,5 @@ export class UserService {
       this.logger.error(e, UserService);
       return `用户信息修改失败`;
     }
-  }
-
-  async getFriendShip(id: number) {
-    const friends = await this.prismaService.friendShip.findMany({
-      where: {
-        // userId 或 friendId 为当前用户的记录
-        OR: [
-          {
-            userId: id,
-          },
-          {
-            friendId: id,
-          },
-        ],
-      },
-    });
-    const set = new Set<number>();
-    forEach(friends, (friend) => {
-      set.add(friend.userId);
-      set.add(friend.friendId);
-    });
-    // 去除自己
-    const friendIds = filter(Array.from(set), (friendId) => friendId !== id);
-
-    const res = [];
-
-    // 这里用forEach不行，因为forEach不支持async
-    for (const friendId of friendIds) {
-      res.push(await this.findUserById(friendId));
-    }
-
-    return res;
   }
 }

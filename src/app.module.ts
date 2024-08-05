@@ -11,9 +11,17 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { FormatResponseInterceptor } from './format-response.interceptor';
 import { CustomExceptionFilter } from './custom-exception.filter';
 import { AuthModule } from './auth/auth.module';
+import { FriendShipModule } from './friend-ship/friend-ship.module';
 
 @Module({
-  imports: [PrismaModule, UserModule, RedisModule, EmailModule, AuthModule],
+  imports: [
+    PrismaModule,
+    UserModule,
+    RedisModule,
+    EmailModule,
+    AuthModule,
+    FriendShipModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
