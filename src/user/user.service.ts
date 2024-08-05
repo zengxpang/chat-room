@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateUserInfoDto } from './dto/update-user-info.dto';
 
 @Injectable()
 export class UserService {
@@ -115,6 +116,34 @@ export class UserService {
     } catch (e) {
       this.logger.error(e, UserService);
       return `密码修改失败`;
+    }
+  }
+
+  async updateUserInfo(id: number, updateUserInfo: UpdateUserInfoDto) {
+    const captcha = await this.redisService.get(
+      `update_user_info_captcha_${updateUserInfo.email}`,
+    );
+    if (!captcha) {
+      throw new BadRequestException('验证码已失效');
+    }
+    if (captcha !== updateUserInfo.captcha) {
+      throw new BadRequestException('验证码不正确');
+    }
+
+    try {
+      await this.prismaService.user.update({
+        where: {
+          id,
+        },
+        data: {
+          avatar: updateUserInfo.avatar,
+          nickname: updateUserInfo.nickname,
+        },
+      });
+      return `用户信息修改成功`;
+    } catch (e) {
+      this.logger.error(e, UserService);
+      return `用户信息修改失败`;
     }
   }
 }

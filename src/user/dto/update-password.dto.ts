@@ -1,6 +1,7 @@
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 
 export class UpdatePasswordDto {
+  // 在没有登陆的时候修改密码的话，@UserInfo('id')是没有值的，所以这里用username
   @IsNotEmpty({
     message: '用户名不能为空',
   })

@@ -19,6 +19,7 @@ import { LocalAuthGuard } from '../local-auth.guard';
 import { AuthService } from '../auth/auth.service';
 import { UserInfo } from '../custom.decorator';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateUserInfoDto } from './dto/update-user-info.dto';
 
 declare module 'express' {
   interface Request {
@@ -94,5 +95,31 @@ export class UserController {
   @Post('updatePassword')
   async updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
     return this.userService.updatePassword(updatePasswordDto);
+  }
+
+  @Get('updateUserInfoCaptcha')
+  async updateUserInfoCaptcha(@UserInfo('email') email: string) {
+    const code = Math.random().toString().slice(2, 8);
+
+    await this.redisService.set(
+      `update_user_info_captcha_${email}`,
+      code,
+      5 * 60,
+    );
+
+    await this.emailService.sendMail({
+      to: email,
+      subject: '修改用户信息验证码',
+      html: `<p>你的修改用户信息验证码是 ${code}</p>`,
+    });
+    return '发送成功';
+  }
+
+  @Post('updateUserInfo')
+  async updateUserInfo(
+    @UserInfo('id') id: number,
+    @Body() updateUserInfo: UpdateUserInfoDto,
+  ) {
+    return this.userService.updateUserInfo(id, updateUserInfo);
   }
 }
