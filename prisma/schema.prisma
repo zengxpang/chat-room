@@ -14,12 +14,25 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique @db.VarChar(50)
-  password  String   @db.VarChar(50)
-  nickname  String   @db.VarChar(50)
-  email     String   @db.VarChar(50)
-  avatar    String   @default("") @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             Int          @id @default(autoincrement())
+  username       String       @unique @db.VarChar(50)
+  password       String       @db.VarChar(50)
+  nickname       String       @db.VarChar(50)
+  email          String       @db.VarChar(50)
+  avatar         String       @default("") @db.VarChar(255)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  friends        FriendShip[] @relation("userToFriend")
+  inverseFriends FriendShip[] @relation("friendToUser")
+}
+
+// user 与 user 的多对多关系(自身的多对多关系)
+model FriendShip {
+  user   User @relation("userToFriend", fields: [userId], references: [id])
+  userId Int
+
+  friend   User @relation("friendToUser", fields: [friendId], references: [id])
+  friendId Int
+
+  @@id([userId, friendId])
 }

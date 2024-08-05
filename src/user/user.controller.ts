@@ -122,4 +122,9 @@ export class UserController {
   ) {
     return this.userService.updateUserInfo(id, updateUserInfo);
   }
+
+  @Get('friendShip')
+  async friendShip(@UserInfo('id') id: number) {
+    return this.userService.getFriendShip(id);
+  }
 }

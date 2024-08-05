@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { filter, forEach } from 'lodash';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
@@ -145,5 +146,37 @@ export class UserService {
       this.logger.error(e, UserService);
       return `用户信息修改失败`;
     }
+  }
+
+  async getFriendShip(id: number) {
+    const friends = await this.prismaService.friendShip.findMany({
+      where: {
+        // userId 或 friendId 为当前用户的记录
+        OR: [
+          {
+            userId: id,
+          },
+          {
+            friendId: id,
+          },
+        ],
+      },
+    });
+    const set = new Set<number>();
+    forEach(friends, (friend) => {
+      set.add(friend.userId);
+      set.add(friend.friendId);
+    });
+    // 去除自己
+    const friendIds = filter(Array.from(set), (friendId) => friendId !== id);
+
+    const res = [];
+
+    // 这里用forEach不行，因为forEach不支持async
+    for (const friendId of friendIds) {
+      res.push(await this.findUserById(friendId));
+    }
+
+    return res;
   }
 }
